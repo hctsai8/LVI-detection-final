@@ -69,7 +69,7 @@ Make sure the following model file exists before running inference:
 - `LVI_detection/vascular_detection_model/train_data/models/vessel_classifier_conch.pth`
 - `LVI_detection/vascular_detection_model/train_data/models/lvi_classifier_conch.pth`
 
-The pipeline also loads CONCH models. To use CONCH model/ run the program, make sure the token need to be created through hugging face. You need to generate the token and replace to the `token.txt` through `hf_auth_token="token.txt"` by yourself, as the github security policy, token cannot be push in any format.
+The pipeline also loads CONCH models. To use CONCH model/run the program, make sure the token needs to be created through Hugging Face. You need to generate the token and replace the `token.txt` through `hf_auth_token="token.txt"` by yourself, as the GitHub security policy states the token cannot be pushed in any format.
 
 ## Running the web app
 
