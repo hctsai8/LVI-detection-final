@@ -11,7 +11,6 @@ from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 
-# ====================== CONFIG ======================
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 
 app.config['UPLOAD_FOLDER'] = os.path.join(BASE_DIR, 'uploads')
@@ -26,8 +25,6 @@ ALLOWED_EXTENSIONS = {'ndpi'}
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-
-# ====================== MAIN PROCESSING ======================
 def process_ndpi_file(ndpi_path, job_id):
     try:
         result_dir = os.path.join(app.config['RESULTS_FOLDER'], job_id)
@@ -93,10 +90,6 @@ def process_ndpi_file(ndpi_path, job_id):
         
         write_status("completed")
 
-        # # Save final status
-        # with open(os.path.join(result_dir, "status.txt"), "w") as f:
-        #     f.write("completed")
-
         print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] 🎉 All processing finished!")
 
     except Exception as e:
@@ -104,8 +97,6 @@ def process_ndpi_file(ndpi_path, job_id):
         with open(os.path.join(result_dir, "status.txt"), "w") as f:
             f.write(f"failed: {str(e)}")
 
-
-# ====================== SSE Logs (Fixed) ======================
 @app.route('/logs/<job_id>')
 def stream_logs(job_id):
     result_dir = os.path.join(app.config['RESULTS_FOLDER'], job_id)
@@ -178,63 +169,6 @@ def upload():
         return redirect(url_for('review', job_id=job_id))
 
     return render_template('upload.html')
-
-
-# @app.route('/review/<job_id>')
-# def review(job_id):
-#     result_dir = os.path.join(app.config['RESULTS_FOLDER'], job_id)
-#     status_file = os.path.join(result_dir, "status.txt")
-
-#     status = "processing"
-#     error_msg = None
-#     vascular_heatmap = None
-#     lvi_heatmap = None
-#     is_lvi_positive = False
-
-#     if os.path.exists(status_file):
-#         with open(status_file) as f:
-#             content = f.read().strip()
-#             if content.startswith("completed"):
-#                 status = "completed"
-#             elif content.startswith("failed"):
-#                 status = "failed"
-#                 error_msg = content.replace("failed: ", "")
-
-#     if status == "completed":
-#         vascular_heatmap = None
-#         lvi_heatmap = None
-
-#         for f in os.listdir(result_dir):
-#             if not f.endswith(('.png', '.jpg', '.jpeg')):
-#                 continue
-#             lower = f.lower()
-            
-#             if ("vascular" in lower or "vessel" in lower or "heatmap" in lower) and not lvi_heatmap:
-#                 vascular_heatmap = f"/results/{job_id}/{f}"
-#                 print(f"Found vascular heatmap: {f}")
-            
-#             if "lvi" in lower and "heatmap" in lower:
-#                 lvi_heatmap = f"/results/{job_id}/{f}"
-#                 print(f"Found LVI heatmap: {f}")
-                
-#         # Check LVI result
-#         lvi_json = os.path.join(result_dir, "lvi_result.json")
-#         if os.path.exists(lvi_json):
-#             try:
-#                 with open(lvi_json, "r") as f:
-#                     data = json.load(f)
-#                     is_lvi_positive = data.get("slide_is_lvi_positive", False)
-#                     print(f"LVI Result: {is_lvi_positive}")
-#             except:
-#                 pass
-
-#     return render_template('review.html',
-#                            job_id=job_id,
-#                            status=status,
-#                            vascular_heatmap=vascular_heatmap,
-#                            lvi_heatmap=lvi_heatmap,
-#                            is_lvi_positive=is_lvi_positive,
-#                            error_msg=error_msg)
 
 @app.route('/review/<job_id>')
 def review(job_id):
