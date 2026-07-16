@@ -35,7 +35,9 @@ def log_print(msg):
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 LVI_TILE_THRESHOLD = 0.50           # Tiles with prob > 0.5 are potential LVI
-SLIDE_LVI_PERCENT_THRESHOLD = 0.25  # > 25% LVI tiles → slide positive
+SLIDE_LVI_PERCENT_THRESHOLD = 0.5  # > 25% LVI tiles → slide positive
+SUSPICIOUS = 0.35
+NON_LVI = 0.25
 
 folder_path = os.path.abspath(args.scan_folder)
 vascular_candidates_dir = os.path.join(folder_path, "vascular_candidates")
@@ -133,12 +135,20 @@ with torch.inference_mode():
 
 lvi_percentage = lvi_tile_count / total_vascular_tiles if total_vascular_tiles > 0 else 0
 slide_is_lvi_positive = lvi_percentage > SLIDE_LVI_PERCENT_THRESHOLD
+if lvi_percentage >= SLIDE_LVI_PERCENT_THRESHOLD:
+    slide_is_lvi_positive = "LVI"
+elif lvi_percentage >= SUSPICIOUS:
+    slide_is_lvi_positive = "Suspicious LVI"
+elif lvi_percentage >= NON_LVI:
+    slide_is_lvi_positive = "Suspicious Non-LVI"
+else:
+    slide_is_lvi_positive = "Non-LVI"
 
 log_print("\n" + "="*60)
 log_print("FINAL SLIDE-LEVEL RESULT:")
 log_print(f"   Total Vascular Tiles : {total_vascular_tiles}")
 log_print(f"   LVI Tiles Detected   : {lvi_tile_count} ({lvi_percentage:.1%})")
-log_print(f"   Slide LVI Positive   : {slide_is_lvi_positive}")
+log_print(f"   Slide Judgement   : {slide_is_lvi_positive}")
 log_print("="*60 + "\n")
 
 result_df = pd.DataFrame(results)

@@ -161,7 +161,6 @@
     <div class="container">
         <h1>NDPI Processing Review</h1>
         
-        <!-- File Summary -->
         <div class="file-summary">
             <h3>Uploaded File Information</h3>
             <div class="file-details">
@@ -180,7 +179,6 @@
             </div>
         </div>
 
-        <!-- Processing Status -->
         <div class="processing-status">
             <h3>Processing Status</h3>
             
@@ -210,11 +208,9 @@
             <div class="progress-text" id="progressText">Vascular Detection in progress... (25%)</div>
         </div>
         
-        <!-- Processing Results -->
         <div class="preview-section">
             <h3>Preview Results</h3>
             
-            <!-- LVI Final Result -->
             {% if status == "completed" %}
             <div class="lvi-result {% if is_lvi_positive %}lvi-positive{% else %}lvi-negative{% endif %}">
                 {% if is_lvi_positive %}
@@ -225,7 +221,6 @@
             </div>
             {% endif %}
 
-            <!-- Heatmaps -->
             <div class="heatmaps-container">
                 {% if vascular_heatmap %}
                 <div class="heatmap-item">
@@ -250,7 +245,6 @@
 
         </div>
         
-        <!-- Live Log -->
         <div class="log-section">
             <h3>Live Processing Log</h3>
             <div class="log-content" id="logContent">
@@ -258,7 +252,6 @@
             </div>
         </div>
         
-        <!-- Action Buttons -->
         <div class="action-buttons">
             <a href="{{ url_for('upload') }}" class="back-button">← Upload Another File</a>
         </div>
@@ -295,7 +288,6 @@
                     lviDone = true;
                     analysisDone = true;
 
-                    // === KEY FIX: Reload page when completed ===
                     if (document.getElementById('overallProgress').style.width !== '100%') {
                         console.log("Processing completed → Reloading to show results");
                         setTimeout(() => window.location.reload(), 800);
@@ -312,13 +304,11 @@
                     lviDone = true;
                 }
 
-                // Update progress bar
                 document.getElementById('overallProgress').style.width = progress + '%';
                 document.getElementById('progressText').textContent = 
                     statusText === "completed" ? 
-                    "✅ All Processing Completed (100%)" : `Processing... ${progress}%`;
+                    "All Processing Completed (100%)" : `Processing... ${progress}%`;
 
-                // Update status indicators
                 if (vascularDone) {
                     document.getElementById('vascularStatus').innerHTML = 
                         `<div class="status-icon status-completed"></div><span>Vascular Detection - Completed</span>`;
@@ -346,7 +336,6 @@
                 document.getElementById('fileSize').textContent = formatFileSize(data.size);
                 document.getElementById('uploadTime').textContent = new Date(data.lastModified).toLocaleString();
             } else {
-                // Fallback
                 document.getElementById('fileName').textContent = "Uploaded NDPI File";
                 document.getElementById('fileSize').textContent = "N/A";
                 document.getElementById('uploadTime').textContent = new Date().toLocaleString();
@@ -362,13 +351,11 @@
             return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
         }
 
-        // Initialize
         document.addEventListener('DOMContentLoaded', function() {
             loadFileData();
             startLogStream();
             updateProgress();
 
-            // Update progress every 30 seconds
             if ("{{ status }}" !== "completed" && "{{ status }}" !== "failed") {
                 setInterval(updateProgress, 30000);
             }

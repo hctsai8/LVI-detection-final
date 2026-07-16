@@ -221,7 +221,6 @@
         
         let selectedFile = null;
         
-        // Drag and drop functionality
         uploadArea.addEventListener('dragover', (e) => {
             e.preventDefault();
             uploadArea.classList.add('dragover');
@@ -240,7 +239,6 @@
             }
         });
         
-        // File input change
         fileInput.addEventListener('change', (e) => {
             if (e.target.files.length > 0) {
                 handleFileSelection(e.target.files[0]);
@@ -250,13 +248,11 @@
         function handleFileSelection(file) {
             hideMessages();
             
-            // Validate file type
             if (!file.name.toLowerCase().endsWith('.ndpi')) {
                 showError('Please select a valid NDPI file.');
                 return;
             }
             
-            // Validate file size (10GB = 10737418240 bytes)
             if (file.size > 10737418240) {
                 showError('File size exceeds 10GB limit. Please select a smaller file.');
                 return;
@@ -264,7 +260,6 @@
             
             selectedFile = file;
             
-            // Display file information
             fileName.textContent = file.name;
             fileSize.textContent = formatFileSize(file.size);
             fileType.textContent = file.type || 'NDPI File';
@@ -326,7 +321,6 @@
                 });
 
                 if (response.redirected) {
-                    // Save file info to sessionStorage before redirect
                     const fileInfo = {
                         "name": selectedFile.name,
                         "size": selectedFile.size,

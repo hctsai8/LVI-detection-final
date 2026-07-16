@@ -73,7 +73,7 @@ def infer_lvi_heatmap_transfer(
 
     lvi_candidates = []
     csv_dir = os.path.dirname(vascular_csv_path)
-    tile_dir = os.path.join(csv_dir, "vascular_candidates")   # ← Main tile location
+    tile_dir = os.path.join(csv_dir, "vascular_candidates")
 
     print(f"Looking for tiles in: {tile_dir}")
 

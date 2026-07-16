@@ -149,7 +149,6 @@
     <div class="container">
         <h1>NDPI Processing Result</h1>
         
-        <!-- File Summary -->
         <div class="file-summary">
             <h3>Uploaded File Information</h3>
             <div class="file-details">
@@ -168,7 +167,6 @@
             </div>
         </div>
 
-        <!-- Final Processing Status -->
         <div class="processing-status">
             <h3>Processing Status</h3>
             
@@ -195,25 +193,30 @@
             <div class="progress-bar">
                 <div class="progress-fill"></div>
             </div>
-            <div class="progress-text">✅ All Processing Completed (100%)</div>
+            <div class="progress-text">All Processing Completed (100%)</div>
         </div>
         
-        <!-- Preview Results -->
         <div class="preview-section">
             <h3>Preview Results</h3>
             
-            <!-- LVI Final Result -->
-            {% if is_lvi_positive %}
+            {% if is_lvi_positive == "LVI" %}
             <div class="lvi-result lvi-positive">
-                Slide is LVI POSITIVE
+                Slide suggests as LVI POSITIVE
+            </div>
+            {% elif is_lvi_positive == "Suspicious LVI" %}
+            <div class="lvi-result lvi-positive">
+                Slide suggests as Suspicious LVI POSITIVE
+            </div>
+            {% elif is_lvi_positive == "Suspicious Non-LVI" %}
+            <div class="lvi-result lvi-positive">
+                Slide suggests as Suspicious Non-LVI NEGATIVE
             </div>
             {% else %}
             <div class="lvi-result lvi-negative">
-                Slide is LVI NEGATIVE
+                Slide suggests as LVI NEGATIVE
             </div>
             {% endif %}
 
-            <!-- Heatmaps -->
             <div class="heatmaps-container">
                 {% if vascular_heatmap %}
                 <div class="heatmap-item">
@@ -235,7 +238,6 @@
             {% endif %}
         </div>
         
-        <!-- Action Buttons -->
         <div class="action-buttons" style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
             <a href="{{ url_for('upload') }}" class="back-button">← Upload Another File</a>
             
@@ -274,7 +276,6 @@
             window.location.href = `/download_results/${jobId}`;
         }
 
-        // Initialize
         document.addEventListener('DOMContentLoaded', function() {
             loadFileData();
         });

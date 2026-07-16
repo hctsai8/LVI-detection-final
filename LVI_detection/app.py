@@ -42,7 +42,7 @@ def process_ndpi_file(ndpi_path, job_id):
         vascular_candidates_dir = os.path.join(result_dir, "vascular_candidates")
         os.makedirs(vascular_candidates_dir, exist_ok=True)
 
-        # === 1. Vascular Detection ===
+        # Vascular Detection
         vascular_script = os.path.join(BASE_DIR, "vascular_detection_model", "main.py")
         print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] Running Vascular Detection...")
         subprocess.run([
@@ -51,30 +51,29 @@ def process_ndpi_file(ndpi_path, job_id):
             "--output", result_dir,
             "--lvi-dir", vascular_candidates_dir
         ], check=True, cwd=BASE_DIR)
-        print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] ✅ Vascular detection completed.")
+        print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] Vascular detection completed.")
         write_status("lvi_running")
 
-        # === 2. LVI Judgment ===
+        # LVI Judgment
         lvi_judgment_script = os.path.join(BASE_DIR, "LVI_detection_model", "judgment.py")
         print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] Running LVI Judgment...")
         subprocess.run([
             "python", lvi_judgment_script,
             "--scan_folder", result_dir,
         ], cwd=result_dir, check=True)
-        print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] ✅ LVI judgment completed.")
+        print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] LVI judgment completed.")
         write_status("analysis_running")
 
-        # === 3. Check Result & Run Transfer if needed ===
         lvi_result_json = os.path.join(result_dir, "lvi_result.json")
         is_lvi_positive = False
 
         if os.path.exists(lvi_result_json):
             with open(lvi_result_json, "r") as f:
                 data = json.load(f)
-                is_lvi_positive = data.get("slide_is_lvi_positive", False)
+                is_lvi_positive = data.get("slide_is_lvi_positive", "Non-LVI")
 
-            if is_lvi_positive:
-                print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] ✅ LVI Positive → Running Transfer Inference...")
+            if is_lvi_positive != "Non-LVI":
+                print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] LVI Positive → Running Transfer Inference...")
                 transfer_script = os.path.join(BASE_DIR, "LVI_detection_model", "transfer", "infer_lvi.py")
                 vascular_csv_path = os.path.join(result_dir, "lvi_candidates_with_conch_LVI.csv")
 
@@ -84,16 +83,16 @@ def process_ndpi_file(ndpi_path, job_id):
                     "--vascular_csv", vascular_csv_path,
                     "--output", result_dir
                 ], check=True, cwd=BASE_DIR)
-                print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] ✅ Transfer inference completed.")
+                print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] Transfer inference completed.")
             else:
-                print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] ⏭️ LVI Negative → Skipping transfer.")
+                print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] LVI Negative → Skipping transfer.")
         
         write_status("completed")
 
-        print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] 🎉 All processing finished!")
+        print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] All processing finished!")
 
     except Exception as e:
-        print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] ❌ ERROR: {str(e)}")
+        print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] ERROR: {str(e)}")
         with open(os.path.join(result_dir, "status.txt"), "w") as f:
             f.write(f"failed: {str(e)}")
 
@@ -120,7 +119,7 @@ def stream_logs(job_id):
                     except Exception:
                         pass
 
-                yield "data: \n\n"  # heartbeat
+                yield "data: \n\n"
                 time.sleep(1.2)
 
         except GeneratorExit:
@@ -131,7 +130,6 @@ def stream_logs(job_id):
     return Response(generate(), mimetype='text/event-stream')
 
 
-# ====================== ROUTES ======================
 @app.route('/')
 def index():
     return redirect(url_for('upload'))
@@ -153,14 +151,11 @@ def upload():
 
         file.save(ndpi_path)
 
-        # Save file info for review page
         file_info = {
             "name": file.filename,
             "size": os.path.getsize(ndpi_path),
             "lastModified": int(time.time() * 1000)
         }
-        # Store in session (for this request)
-        # We'll pass it via template in review
 
         thread = threading.Thread(target=process_ndpi_file, args=(ndpi_path, job_id))
         thread.daemon = True
@@ -188,9 +183,7 @@ def review(job_id):
             elif content.startswith("failed"):
                 status = "failed"
 
-    # If completed → redirect to final preview page
     if status == "completed":
-        # Find heatmaps (same logic you already have)
         for f in os.listdir(result_dir):
             if not f.endswith(('.png', '.jpg', '.jpeg')): continue
             lower = f.lower()
@@ -204,7 +197,7 @@ def review(job_id):
             try:
                 with open(lvi_json) as f:
                     data = json.load(f)
-                    is_lvi_positive = data.get("slide_is_lvi_positive", False)
+                    is_lvi_positive = data.get("slide_is_lvi_positive", "Non-LVI")
             except:
                 pass
 
@@ -214,13 +207,12 @@ def review(job_id):
                                lvi_heatmap=lvi_heatmap,
                                is_lvi_positive=is_lvi_positive)
 
-    # Still processing → show live review page
     return render_template('review.html',
                            job_id=job_id,
                            status=status,
                            vascular_heatmap=None,
                            lvi_heatmap=None,
-                           is_lvi_positive=False)
+                           is_lvi_positive="Non-LVI")
 
 @app.route('/results/<path:filename>')
 def serve_result(filename):
@@ -252,19 +244,16 @@ def download_results(job_id):
             for filename in os.listdir(result_dir):
                 file_path = os.path.join(result_dir, filename)
                 
-                # Add heatmaps
                 if filename.lower().endswith(('.png', '.jpg', '.jpeg')):
                     zf.write(file_path, f"heatmaps/{filename}")
                     files_added += 1
                     print(f"Added to zip: {filename}")
                 
-                # Add CSV files
                 elif filename.lower().endswith('.csv'):
                     zf.write(file_path, f"data/{filename}")
                     files_added += 1
                     print(f"Added to zip: {filename}")
                 
-                # Add JSON result
                 elif filename == "lvi_result.json":
                     zf.write(file_path, f"data/{filename}")
                     files_added += 1
